@@ -1,32 +1,46 @@
+import sys
+import os
 from src.detection.data_analyzer import fetch_and_analyze_data
 from src.signal.signal_engine import generate_signal
 from src.database.db import create_tables, save_analysis
-import os
+
+# Terminal encoding ayarı
+if sys.platform == "win32":
+    sys.stdout.reconfigure(encoding='utf-8')
 
 def main():
-    print("🚀 AI Trading Signal System Başladı\n")
+    print("Sistem başlatıldı...\n")
 
-    # DB oluştur
+    # DB kurulumu
     create_tables()
 
-    # analiz yap (Test için)
-    print("Masaüstü/Terminal analizi için AAPL hissesi canlı test ediliyor...")
+    # Test
+    ticker = "BTCUSDT"
+    print(f"{ticker} analiz ediliyor...")
     
-    # Gerçek sembol üzerinden test
-    pattern, df, peaks, troughs, pattern_points = fetch_and_analyze_data("AAPL", limit=90)
-    result = generate_signal(pattern)
+    pattern, df, peaks, troughs, pattern_points, dynamic_conf = fetch_and_analyze_data(ticker, limit=90)
+    
+    if pattern == "error":
+        print("Hata: Veri alınamadı.")
+        return
 
-    print(f"Detected Pattern/Trend: {pattern}")
-    print(f"Signal: {result['signal']}")
-    print(f"Confidence: {result['confidence']}")
+    result = generate_signal(pattern, dynamic_conf)
 
-    # DB'ye kaydet
-    save_analysis(
-        user_id=1,
-        pattern_id=1,
-        signal_id=1,
-        confidence=result["confidence"]
-    )
+    print(f"Formasyon: {pattern}")
+    print(f"Sinyal: {result['signal']}")
+    print(f"Güven: {result['confidence']}")
+
+    # Kaydet
+    try:
+        save_analysis(
+            u_id=1,
+            p_id=pattern,
+            s_id=result["signal"],
+            conf=result["confidence"]
+        )
+        print("Analiz kaydedildi.")
+    except Exception as e:
+        print(f"DB Hatası: {e}")
 
 if __name__ == "__main__":
     main()

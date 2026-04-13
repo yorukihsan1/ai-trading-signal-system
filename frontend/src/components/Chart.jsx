@@ -8,17 +8,23 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer
+  ResponsiveContainer,
+  ReferenceLine,
+  Label
 } from 'recharts';
 
-const ChartComponent = ({ chartData, peaks, troughs, patternPoints, patternName }) => {
-  // Veriyi Recharts'in anlayabileceği şekle getiriyoruz
+const ChartComponent = ({ chartData, peaks, troughs, patternPoints, patternName, entry, target, stop }) => {
+  // Veriyi Recharts formatına sok
   const processedData = useMemo(() => {
     if (!chartData || !Array.isArray(chartData)) return [];
     
     return chartData.map((item, index) => {
-      // Güvenlik amacıyla Close değerinin varlığını kontrol edelim
-      const closeVal = isNaN(item.Close) || item.Close === null ? null : parseFloat(item.Close);
+      const keys = Object.keys(item);
+      const closeKey = keys.find(k => k.toLowerCase() === 'close' || k.toLowerCase() === 'price');
+      const dateKey = keys.find(k => k.toLowerCase() === 'date' || k.toLowerCase() === 'datetime' || k.toLowerCase() === 'tarih');
+
+      const rawClose = item[closeKey];
+      const closeVal = isNaN(rawClose) || rawClose === null ? null : parseFloat(rawClose);
       
       const isPeak = peaks?.includes(index);
       const isTrough = troughs?.includes(index);
@@ -26,7 +32,7 @@ const ChartComponent = ({ chartData, peaks, troughs, patternPoints, patternName 
       
       return {
         ...item,
-        name: item.index || item.Date || item.Datetime || index, // x-axis için
+        name: item[dateKey] || index,
         indexValue: index,
         Close: closeVal,
         Peak: isPeak ? closeVal : null,
@@ -37,10 +43,10 @@ const ChartComponent = ({ chartData, peaks, troughs, patternPoints, patternName 
   }, [chartData, peaks, troughs, patternPoints]);
 
   if (!processedData || processedData.length === 0) {
-    return <div style={{ color: 'white', textAlign: 'center', paddingTop: '20px' }}>Grafik verisi bulunamadı.</div>;
+    return <div style={{ color: 'white', textAlign: 'center', paddingTop: '20px' }}>Veri yok.</div>;
   }
 
-  // Özel Tooltip (Glassmorphism)
+  // Tooltip
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       const dataPoint = payload[0].payload;
@@ -54,12 +60,12 @@ const ChartComponent = ({ chartData, peaks, troughs, patternPoints, patternName 
           color: 'white',
           boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
         }}>
-          <p style={{ margin: '0 0 5px 0', color: '#94a3b8', fontSize: '0.85rem' }}>Tarih: {label}</p>
+          <p style={{ margin: '0 0 5px 0', color: '#94a3b8', fontSize: '0.85rem' }}>{label}</p>
           <p style={{ margin: '0 0 5px 0', fontWeight: 'bold' }}>Fiyat: {dataPoint.Close < 1 ? dataPoint.Close.toFixed(4) : dataPoint.Close.toFixed(2)}</p>
           
-          {dataPoint.Peak && <p style={{ margin: '0', color: '#10b981', fontSize: '0.85rem' }}>• Tepe Noktası</p>}
-          {dataPoint.Trough && <p style={{ margin: '0', color: '#f43f5e', fontSize: '0.85rem' }}>• Dip Noktası</p>}
-          {dataPoint.Pattern && <p style={{ margin: '0', color: '#818cf8', fontSize: '0.85rem', fontWeight: 'bold' }}>• Formasyon Node ({patternName})</p>}
+          {dataPoint.Peak && <p style={{ margin: '0', color: '#10b981', fontSize: '0.85rem' }}>• Tepe</p>}
+          {dataPoint.Trough && <p style={{ margin: '0', color: '#f43f5e', fontSize: '0.85rem' }}>• Dip</p>}
+          {dataPoint.Pattern && <p style={{ margin: '0', color: '#818cf8', fontSize: '0.85rem', fontWeight: 'bold' }}>• Formasyon ({patternName})</p>}
         </div>
       );
     }
@@ -70,16 +76,10 @@ const ChartComponent = ({ chartData, peaks, troughs, patternPoints, patternName 
     <ResponsiveContainer width="100%" height="100%">
       <ComposedChart
         data={processedData}
-        margin={{
-          top: 20,
-          right: 20,
-          bottom: 20,
-          left: 20,
-        }}
+        margin={{ top: 20, right: 60, bottom: 20, left: 20 }}
       >
         <CartesianGrid stroke="rgba(255, 255, 255, 0.05)" strokeDasharray="3 3" vertical={false} />
         
-        {/* X Ekseni (Çok kalabalık olmamasına dikkat edelim) */}
         <XAxis 
           dataKey="name" 
           stroke="#64748b" 
@@ -87,7 +87,6 @@ const ChartComponent = ({ chartData, peaks, troughs, patternPoints, patternName 
           minTickGap={30}
         />
         
-        {/* Y Ekseni */}
         <YAxis 
           domain={['auto', 'auto']} 
           stroke="#64748b" 
@@ -96,10 +95,25 @@ const ChartComponent = ({ chartData, peaks, troughs, patternPoints, patternName 
         />
         
         <Tooltip content={<CustomTooltip />} />
-        
         <Legend wrapperStyle={{ paddingTop: '20px' }} />
 
-        {/* Ana Çizgi Grafiği */}
+        {/* Tahmin Seviyeleri */}
+        {target && (
+          <ReferenceLine y={target} stroke="#10b981" strokeDasharray="5 5" strokeWidth={2}>
+            <Label value="HEDEF" position="right" fill="#10b981" fontSize={10} fontWeight="bold" />
+          </ReferenceLine>
+        )}
+        {entry && (
+          <ReferenceLine y={entry} stroke="#38bdf8" strokeDasharray="3 3">
+            <Label value="GİRİŞ" position="right" fill="#38bdf8" fontSize={10} />
+          </ReferenceLine>
+        )}
+        {stop && (
+          <ReferenceLine y={stop} stroke="#f43f5e" strokeDasharray="5 5">
+            <Label value="STOP" position="right" fill="#f43f5e" fontSize={10} fontWeight="bold" />
+          </ReferenceLine>
+        )}
+
         <Line 
           type="monotone" 
           dataKey="Close" 
@@ -110,25 +124,22 @@ const ChartComponent = ({ chartData, peaks, troughs, patternPoints, patternName 
           name="Fiyat"
         />
 
-        {/* Tepe Noktaları (Triangle Up) */}
         <Scatter 
-          name="Tepe Noktaları" 
+          name="Tepe" 
           dataKey="Peak" 
           fill="#10b981" 
           shape="triangle"
           line={null}
         />
         
-        {/* Dip Noktaları (Triangle Down - shape formatter ile özel çizilebilir ama star kullanabiliriz built-in) */}
         <Scatter 
-          name="Dip Noktaları" 
+          name="Dip" 
           dataKey="Trough" 
           fill="#f43f5e" 
           shape="star" 
           line={null}
         />
 
-        {/* Formasyon Noktaları (Cross) */}
         {patternPoints && patternPoints.length > 0 && (
            <Scatter 
              name={`Formasyon (${patternName.toUpperCase()})`} 

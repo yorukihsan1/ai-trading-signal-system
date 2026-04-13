@@ -3,8 +3,10 @@ import axios from 'axios';
 import { Search, Activity, History, TrendingUp, BarChart2, User, LogOut, Star } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import ChartComponent from '../components/Chart';
+import PatternAnalysisView from '../components/PatternAnalysisView';
 import '../index.css';
 
+// Dashboard
 const formatPrice = (val) => {
   if (val === null || val === undefined) return '-';
   const num = Number(val);
@@ -220,6 +222,19 @@ function Dashboard() {
           Favorilerim
         </button>
         <button 
+          className={`tab-btn ${!showLanding && activeTab === 'ml_analysis' ? 'active' : ''}`}
+          onClick={() => {
+            if (!localStorage.getItem('token')) {
+              showNotification("Formasyon analizi yapmak için giriş yapmalısınız.", "error");
+              return;
+            }
+            setShowLanding(false);
+            setActiveTab('ml_analysis');
+          }}
+        >
+          Formasyon Analizi
+        </button>
+        <button 
           className={`tab-btn ${!showLanding && activeTab === 'history' ? 'active' : ''}`}
           onClick={() => {
             if (!localStorage.getItem('token')) {
@@ -394,23 +409,37 @@ function Dashboard() {
                         troughs={result.troughs} 
                         patternPoints={result.pattern_points} 
                         patternName={result.pattern}
+                        entry={result.entry}
+                        target={result.target}
+                        stop={result.stop}
                       />
                     </div>
                   </div>
 
                   <div className="side-panel">
                     <div className="glass-panel result-card">
-                      <div className="result-label">Tespit Edilen Trend/Formasyon</div>
-                      <div className="result-value" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                      <div className="result-label">Tespit Edilen Formasyon</div>
+                      <div className="result-value" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '8px' }}>
                         <BarChart2 size={24} color="var(--accent-purple)" />
-                        {result.pattern.toUpperCase()}
+                        {result.pattern === 'trend' ? 'TREND ANALİZİ' : result.pattern.replace('_', ' ').toUpperCase()}
+                      </div>
+                      <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+                        {result.pattern === 'double_top' && "Düşüş dönüş formasyonu. İki zirve sonrası geri çekilme beklenir."}
+                        {result.pattern === 'triangle' && "Fiyat sıkışması. Kırılım yönünde sert hareket gelebilir."}
+                        {result.pattern === 'trend' && "Belirgin formasyon yok. Genel trend verileri inceleniyor."}
+                        {result.pattern === 'none' && "Formasyon tespit edilemedi."}
                       </div>
                     </div>
 
                     <div className="glass-panel result-card">
-                      <div className="result-label">Üretilen Sinyal Kararı</div>
-                      <div className={`result-value signal-${result.signal}`}>
+                      <div className="result-label">Yapay Zeka Sinyali</div>
+                      <div className={`result-value signal-${result.signal}`} style={{ textShadow: '0 0 20px currentColor' }}>
                         {result.signal}
+                      </div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                        {result.signal === 'BUY' && "Alım fırsatı değerlendirilebilir."}
+                        {result.signal === 'SELL' && "Satış veya kar alım bölgesi."}
+                        {result.signal === 'HOLD' && "Bekle ve gör politikası önerilir."}
                       </div>
                     </div>
 
@@ -428,20 +457,41 @@ function Dashboard() {
                     </div>
 
                     {result.signal !== 'HOLD' && result.entry && (
-                      <div className="glass-panel result-card" style={{ marginTop: '24px', textAlign: 'left', padding: '24px' }}>
-                        <div className="result-label" style={{ textAlign: 'center', marginBottom: '16px' }}>AL/SAT Stratejisi</div>
+                      <div className="glass-panel result-card" style={{ marginTop: '24px', textAlign: 'left', padding: '24px', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
+                        <div className="result-label" style={{ textAlign: 'center', marginBottom: '16px', color: 'var(--accent-blue)', fontWeight: 'bold' }}>Yapay Zeka Fiyat Tahmini</div>
+                        
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.05rem', marginBottom: '12px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '8px' }}>
-                           <span style={{color: 'var(--text-muted)'}}>Giriş Fiyatı:</span> 
+                           <span style={{color: 'var(--text-muted)'}}>Giriş (Tahmin):</span> 
                            <span style={{fontWeight: 'bold', color: 'var(--text-primary)'}}>{formatPrice(result.entry)}</span>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.05rem', marginBottom: '12px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '8px' }}>
-                           <span style={{color: 'var(--text-muted)'}}>Hedef:</span> 
+                           <span style={{color: 'var(--text-muted)'}}>Hedef Fiyat:</span> 
                            <span style={{fontWeight: 'bold', color: 'var(--success)'}}>{formatPrice(result.target)}</span>
                         </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.05rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.05rem', marginBottom: '16px' }}>
                            <span style={{color: 'var(--text-muted)'}}>Zarar Kes:</span> 
                            <span style={{fontWeight: 'bold', color: 'var(--danger)'}}>{formatPrice(result.stop)}</span>
                         </div>
+
+                        {/* Risk/Ödül Oranı */}
+                        {result.target && result.stop && (
+                          <div style={{ 
+                            background: 'rgba(255,255,255,0.03)', 
+                            padding: '12px', 
+                            borderRadius: '8px', 
+                            display: 'flex', 
+                            justifyContent: 'space-between',
+                            alignItems: 'center'
+                          }}>
+                             <span style={{fontSize: '0.85rem', color: 'var(--text-secondary)'}}>Risk / Ödül Oranı:</span>
+                             <span style={{ 
+                               fontWeight: 'bold', 
+                               color: (Math.abs(result.target - result.entry) / Math.abs(result.entry - result.stop)) >= 2 ? 'var(--success)' : 'var(--warning)'
+                             }}>
+                               1 : {(Math.abs(result.target - result.entry) / Math.abs(result.entry - result.stop)).toFixed(2)}
+                             </span>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -489,6 +539,10 @@ function Dashboard() {
               getAuthHeader={getAuthHeader}
               showNotification={showNotification}
             />
+          )}
+
+          {activeTab === 'ml_analysis' && (
+            <PatternAnalysisView getAuthHeader={getAuthHeader} showNotification={showNotification} />
           )}
 
           {activeTab === 'history' && (

@@ -1,0 +1,14 @@
+--- TESPİT SONUÇLARI (1 adet) ---
+[0] double_top: %39.84
+SEÇİLEN: double_top (%39.84)
+--- TESPİT SONUÇLARI (1 adet) ---
+[0] double_top: %39.84
+SEÇİLEN (RAW ID: 0, MAPPING: double_bottom) (%39.84)
+--- TESPİT SONUÇLARI (1 adet) ---
+MODEL_INTERNAL_NAMES: {0: 'double_top', 1: 'double_bottom', 2: 'ascending_triangle', 3: 'descending_triangle'}
+[0] double_top (ID:0): %39.84
+SEÇİLEN (RAW ID: 0, MAPPING: double_bottom) (%39.84)
+--- TESPİT SONUÇLARI (1 adet) ---
+MODEL_INTERNAL_NAMES: {0: 'double_top', 1: 'double_bottom', 2: 'ascending_triangle', 3: 'descending_triangle'}
+[0] double_top (ID:0): %39.84
+SEÇİLEN (ID: 0, NAME: double_top) (%39.84)
