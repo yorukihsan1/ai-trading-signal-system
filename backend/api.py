@@ -153,4 +153,6 @@ async def toggle_fav(request: ToggleFavRequest, user=Depends(get_user_from_token
     return {"success": True, "status": "added"}
 
 if __name__ == "__main__":
-    uvicorn.run("api:api", host="0.0.0.0", port=8000, reload=True)
+    port = int(os.environ.get("PORT", 8000))
+    print(f"Server starting on port {port}...")
+    uvicorn.run("api:api", host="0.0.0.0", port=port, reload=True)

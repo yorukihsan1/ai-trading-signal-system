@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { FiUploadCloud, FiBarChart2, FiCheckCircle, FiX, FiInfo } from 'react-icons/fi';
 import axios from 'axios';
+import API_BASE_URL from '../api/config';
 
 /**
  * Formasyon Analizi (YOLOv8)
@@ -40,7 +41,7 @@ const PatternAnalysisView = ({ getAuthHeader, showNotification }) => {
 
     try {
       const headers = getAuthHeader ? getAuthHeader() : {};
-      const response = await axios.post('http://localhost:8000/api/detect-image', formData, {
+      const response = await axios.post(`${API_BASE_URL}/api/detect-image`, formData, {
         headers: {
           ...headers,
           'Content-Type': 'multipart/form-data',

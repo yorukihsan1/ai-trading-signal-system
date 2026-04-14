@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { Activity } from 'lucide-react';
+import API_BASE_URL from '../api/config';
 import '../index.css';
 
 function Login() {
@@ -17,7 +18,7 @@ function Login() {
     setError('');
     
     try {
-      const response = await axios.post('http://localhost:8000/api/auth/login', {
+      const response = await axios.post(`${API_BASE_URL}/api/auth/login`, {
         username: username,
         password: password
       });

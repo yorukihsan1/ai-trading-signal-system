@@ -4,6 +4,7 @@ import { Search, Activity, History, TrendingUp, BarChart2, User, LogOut, Star } 
 import { useNavigate, Link } from 'react-router-dom';
 import ChartComponent from '../components/Chart';
 import PatternAnalysisView from '../components/PatternAnalysisView';
+import API_BASE_URL from '../api/config';
 import '../index.css';
 
 // Dashboard
@@ -44,7 +45,7 @@ function Dashboard() {
   const fetchFavorites = async () => {
     if (!localStorage.getItem('token')) return;
     try {
-      const response = await axios.get('http://localhost:8000/api/favorites/ticker', {
+      const response = await axios.get(`${API_BASE_URL}/api/favorites/ticker`, {
         headers: getAuthHeader()
       });
       if (response.data.success) {
@@ -62,7 +63,7 @@ function Dashboard() {
     }
     
     try {
-      const response = await axios.post('http://localhost:8000/api/favorites/ticker/toggle', 
+      const response = await axios.post(`${API_BASE_URL}/api/favorites/ticker/toggle`, 
         { ticker: symbol },
         { headers: getAuthHeader() }
       );
@@ -92,7 +93,7 @@ function Dashboard() {
     setResult(null);
     
     try {
-      const response = await axios.post('http://localhost:8000/api/analyze', 
+      const response = await axios.post(`${API_BASE_URL}/api/analyze`, 
         { ticker: targetTicker },
         { headers: getAuthHeader() }
       );
@@ -113,7 +114,7 @@ function Dashboard() {
   const fetchHistory = async () => {
     setHistoryLoading(true);
     try {
-      const response = await axios.get('http://localhost:8000/api/history', {
+      const response = await axios.get(`${API_BASE_URL}/api/history`, {
         headers: getAuthHeader()
       });
       if (response.data.success) {
@@ -129,7 +130,7 @@ function Dashboard() {
   const fetchUserProfile = async () => {
     if (!localStorage.getItem('token')) return;
     try {
-      const response = await axios.get('http://localhost:8000/api/auth/me', {
+      const response = await axios.get(`${API_BASE_URL}/api/auth/me`, {
         headers: getAuthHeader()
       });
       if (response.data.success) {
@@ -651,7 +652,7 @@ function ProfileView({ userData, onUpdate, getAuthHeader, showNotification }) {
     e.preventDefault();
     setLoading(true);
     try {
-      const response = await axios.post('http://localhost:8000/api/auth/update-profile', 
+      const response = await axios.post(`${API_BASE_URL}/api/auth/update-profile`, 
         { email, avatar },
         { headers: getAuthHeader() }
       );
@@ -674,7 +675,7 @@ function ProfileView({ userData, onUpdate, getAuthHeader, showNotification }) {
     }
     setLoading(true);
     try {
-      const response = await axios.post('http://localhost:8000/api/auth/change-password', 
+      const response = await axios.post(`${API_BASE_URL}/api/auth/change-password`, 
         { current_password: passForm.current, new_password: passForm.new },
         { headers: getAuthHeader() }
       );
