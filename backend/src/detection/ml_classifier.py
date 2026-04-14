@@ -1,8 +1,6 @@
 import os
 import cv2
-import torch
 import numpy as np
-from ultralytics import YOLO
 
 class PatternClassifier:
     """YOLOv8 Pattern Detector."""
@@ -13,22 +11,34 @@ class PatternClassifier:
             base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
             model_path = os.path.join(base_dir, "models", "pattern_model.pt")
             
+        self.model_path = model_path
         self.model = None
-        if os.path.exists(model_path):
+
+    def _load_model(self):
+        """Modeli ihtiyaç anında yükler."""
+        if self.model is not None:
+            return True
+            
+        if os.path.exists(self.model_path):
             try:
-                self.model = YOLO(model_path)
-                print(f"Model yüklendi: {model_path}")
+                from ultralytics import YOLO
+                self.model = YOLO(self.model_path)
+                print(f"Model yüklendi: {self.model_path}")
+                return True
             except Exception as e:
                 print(f"Yükleme hatası: {e}")
+                return False
         else:
-            print(f"Hata: Model yok -> {model_path}")
+            print(f"Hata: Model yok -> {self.model_path}")
+            return False
 
     def predict(self, image_bytes: bytes):
         """Görsel analizi."""
-        if not self.model:
+        if not self._load_model():
             return "no_model", 0.0
 
         try:
+            import torch
             nparr = np.frombuffer(image_bytes, np.uint8)
             img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
             
