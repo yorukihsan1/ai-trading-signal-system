@@ -32,6 +32,7 @@ def create_tables():
         CREATE TABLE IF NOT EXISTS analysis (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER,
+            symbol TEXT,
             pattern_id INTEGER,
             signal_id INTEGER,
             confidence REAL,
@@ -43,6 +44,12 @@ def create_tables():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """)
+
+        # Symbol sütunu var mı kontrol et (migration)
+        try:
+            cursor.execute("ALTER TABLE analysis ADD COLUMN symbol TEXT")
+        except:
+            pass
 
         cursor.execute("""
         CREATE TABLE IF NOT EXISTS user_favorites (
@@ -76,13 +83,13 @@ def get_user_by_username(username):
     except: return None
     finally: conn.close()
 
-def save_analysis(u_id, p_id, s_id, conf, entry=None, target=None, stop=None, risk=None):
+def save_analysis(u_id, symbol, p_id, s_id, conf, entry=None, target=None, stop=None, risk=None):
     conn = get_connection()
     try:
         conn.execute("""
-            INSERT INTO analysis (user_id, pattern_id, signal_id, confidence, entry_price, target_price, stop_loss, risk_level)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (u_id, p_id, s_id, conf, entry, target, stop, risk))
+            INSERT INTO analysis (user_id, symbol, pattern_id, signal_id, confidence, entry_price, target_price, stop_loss, risk_level)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (u_id, symbol, p_id, s_id, conf, entry, target, stop, risk))
         conn.commit()
     except Exception as e:
         print(f"Save Error: {e}")
@@ -92,7 +99,7 @@ def get_user_analysis(u_id):
     """Kullanıcıya özel analiz geçmişini döner."""
     conn = get_connection()
     try:
-        return conn.execute("SELECT * FROM analysis WHERE user_id = ? ORDER BY id DESC", (u_id,)).fetchall()
+        return conn.execute("SELECT id, pattern_id, signal_id, confidence, entry_price, target_price, stop_loss, created_at, symbol FROM analysis WHERE user_id = ? ORDER BY id DESC", (u_id,)).fetchall()
     except: return []
     finally: conn.close()
 

@@ -1,7 +1,10 @@
 import requests
 import pandas as pd
 import numpy as np
+import logging
 from scipy.signal import find_peaks
+
+logger = logging.getLogger(__name__)
 
 def fetch_and_analyze_data(ticker_symbol, limit=120):
     """Binance üzerinden veri çekip tepe/dip analizi yapar."""
@@ -82,6 +85,6 @@ def fetch_and_analyze_data(ticker_symbol, limit=120):
         return pattern, df, peaks, troughs, pattern_points, conf
         
     except Exception as e:
-        print(f"Hata: {e}")
+        logger.error(f"Error fetching data for {ticker_symbol}: {e}", exc_info=True)
         return "error", None, [], [], [], 0.0
 
