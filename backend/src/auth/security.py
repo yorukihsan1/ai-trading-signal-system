@@ -4,7 +4,7 @@ import jwt
 
 SECRET_KEY = "super_secret_key_for_this_project_ai_trading"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7 # 7 days validity
+ACCESS_TOKEN_EXPIRE_MINUTES = 120 # 2 hours validity
 
 pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 

@@ -61,6 +61,9 @@ def create_tables():
             FOREIGN KEY(user_id) REFERENCES users(id)
         )
         """)
+        # Performance indices for faster lookups
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_analysis_user_id ON analysis(user_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_user_favorites_user_id ON user_favorites(user_id)")
         conn.commit()
     except sqlite3.Error as e:
         print(f"DB Hatası: {e}")

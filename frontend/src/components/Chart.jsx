@@ -154,4 +154,4 @@ const ChartComponent = ({ chartData, peaks, troughs, patternPoints, patternName,
   );
 };
 
-export default ChartComponent;
+export default React.memo(ChartComponent);

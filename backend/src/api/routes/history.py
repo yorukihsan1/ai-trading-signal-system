@@ -5,7 +5,7 @@ from src.auth.deps import get_user_from_token
 
 router = APIRouter(prefix="/api/history", tags=["history"])
 
-@router.get("/")
+@router.get("")
 async def get_history(user=Depends(get_user_from_token)):
     """Analiz geçmişi."""
     rows = get_user_analysis(user.get('user_id'))

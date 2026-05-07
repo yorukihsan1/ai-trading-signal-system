@@ -3,9 +3,11 @@ import pandas as pd
 import numpy as np
 import logging
 from scipy.signal import find_peaks
+from cachetools import cached, TTLCache
 
 logger = logging.getLogger(__name__)
 
+@cached(cache=TTLCache(maxsize=100, ttl=300))
 def fetch_and_analyze_data(ticker_symbol, limit=120):
     """Binance üzerinden veri çekip tepe/dip analizi yapar."""
     try:

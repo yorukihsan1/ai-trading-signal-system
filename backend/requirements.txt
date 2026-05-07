@@ -16,3 +16,6 @@ passlib[bcrypt]
 PyJWT
 ultralytics
 gunicorn
+cachetools
+slowapi
+groq

@@ -8,6 +8,7 @@ import FavoritesView from '../components/dashboard/FavoritesView';
 import HistoryTable from '../components/dashboard/HistoryTable';
 import ProfileView from '../components/dashboard/ProfileView';
 import PatternAnalysisView from '../components/PatternAnalysisView';
+import ChatbotWidget from '../components/chat/ChatbotWidget';
 
 import { useDashboardData } from '../hooks/useDashboardData';
 import '../index.css';
@@ -216,6 +217,9 @@ function Dashboard() {
           <div style={{fontWeight: 600}}>{notification.message}</div>
         </div>
       )}
+
+      {/* Chatbot Widget */}
+      <ChatbotWidget currentTicker={ticker} />
     </div>
   );
 }

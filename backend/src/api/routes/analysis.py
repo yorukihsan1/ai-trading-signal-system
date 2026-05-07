@@ -1,8 +1,8 @@
 import pandas as pd
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
-from pydantic import BaseModel
-
+from pydantic import BaseModel, Field
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Request
+from src.utils.limiter import limiter
 from src.database.db import save_analysis
 from src.auth.deps import get_optional_user
 from src.detection.ml_classifier import classifier
@@ -12,15 +12,21 @@ from src.signal.signal_engine import generate_signal
 router = APIRouter(prefix="/api", tags=["analysis"])
 
 class AnalyzeRequest(BaseModel):
-    ticker: str
+    ticker: str = Field(..., min_length=2, max_length=15, pattern=r'^[a-zA-Z0-9\-\/]+$')
 
 @router.post("/analyze")
-async def analyze_ticker(request: AnalyzeRequest, user=Depends(get_optional_user)):
+@limiter.limit("20/minute")
+async def analyze_ticker(request: Request, payload: AnalyzeRequest, user=Depends(get_optional_user)):
     """Canlı analiz."""
-    pattern, df, peaks, troughs, pattern_points, dynamic_conf = fetch_and_analyze_data(request.ticker)
+    try:
+        pattern, df, peaks, troughs, pattern_points, dynamic_conf = fetch_and_analyze_data(payload.ticker)
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception:
+        raise HTTPException(status_code=500, detail="Bir hata oluştu, lütfen daha sonra tekrar deneyin.")
     
     if pattern == "error":
-        raise HTTPException(status_code=400, detail="Analiz hatası.")
+        raise HTTPException(status_code=400, detail="Analiz hatası: Geçerli bir desen bulunamadı veya veri alınamadı.")
 
     # Sinyal üret
     current_price = float(df['Close'].iloc[-1])
@@ -42,7 +48,7 @@ async def analyze_ticker(request: AnalyzeRequest, user=Depends(get_optional_user
         try:
             save_analysis(
                 u_id=user['user_id'],
-                symbol=request.ticker.upper(),
+                symbol=payload.ticker.upper(),
                 p_id=pattern,
                 s_id=signal,
                 conf=conf,
@@ -56,7 +62,7 @@ async def analyze_ticker(request: AnalyzeRequest, user=Depends(get_optional_user
 
     return {
         "success": True,
-        "ticker": request.ticker.upper(),
+        "ticker": payload.ticker.upper(),
         "pattern": pattern,
         "signal": signal,
         "confidence": conf,
@@ -70,11 +76,12 @@ async def analyze_ticker(request: AnalyzeRequest, user=Depends(get_optional_user
     }
 
 @router.post("/detect-image")
-async def detect_image(file: UploadFile = File(...)):
+@limiter.limit("10/minute")
+async def detect_image(request: Request, file: UploadFile = File(...)):
     """Görsel analizi."""
     try:
         data = await file.read()
         pattern, confidence = classifier.predict(data)
         return {"pattern": pattern, "confidence": confidence, "status": "success"}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Görsel analizi sırasında bir hata oluştu.")

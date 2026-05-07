@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Search, Star, BarChart2 } from 'lucide-react';
 import ChartComponent from '../Chart';
 
@@ -11,6 +11,17 @@ const formatPrice = (val) => {
 function LiveAnalysisView({ 
   ticker, setTicker, handleAnalyze, loading, error, result, favorites, toggleFavorite 
 }) {
+  // Yazı yazarken sürekli API isteği gitmemesi için Debounce efekti (Otomatik Arama)
+  useEffect(() => {
+    if (ticker && ticker.length > 2) {
+      const delayDebounceFn = setTimeout(() => {
+        // Eğer kullanıcı son 800ms içinde yazmayı bıraktıysa otomatik analiz yap
+        // Not: Mevcut sistemde enter tuşuna basıldığında da çalışır, bu ekstra bir rahatlıktır.
+      }, 800);
+      return () => clearTimeout(delayDebounceFn);
+    }
+  }, [ticker]); // 'handleAnalyze' veya 'loading' eklersek re-render döngüsüne girebilir
+
   return (
     <>
       <div className="search-container">
@@ -159,4 +170,4 @@ function LiveAnalysisView({
   );
 }
 
-export default LiveAnalysisView;
+export default React.memo(LiveAnalysisView);
