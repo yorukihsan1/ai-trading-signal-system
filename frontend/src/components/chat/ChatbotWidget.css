@@ -241,3 +241,45 @@
   0% { background-color: var(--accent-blue); }
   50%, 100% { background-color: rgba(56, 189, 248, 0.2); }
 }
+
+/* Quick Questions Styles */
+.quick-questions-container {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: slideUp 0.3s ease-out;
+}
+
+.quick-questions-title {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+  padding-left: 4px;
+}
+
+.quick-questions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.quick-question-btn {
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #38bdf8;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1.3;
+}
+
+.quick-question-btn:hover {
+  background: rgba(56, 189, 248, 0.2);
+  border-color: rgba(56, 189, 248, 0.5);
+  transform: translateY(-1px);
+}
+

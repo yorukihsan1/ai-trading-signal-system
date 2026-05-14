@@ -1,4 +1,5 @@
 import React from 'react';
+import { Clock } from 'lucide-react';
 
 const formatPrice = (val) => {
   if (val === null || val === undefined) return '-';
@@ -15,8 +16,10 @@ function HistoryTable({ history, historyLoading }) {
            <p>Kayıtlar Yükleniyor...</p>
          </div>
       ) : history.length === 0 ? (
-         <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)' }}>
-           Geçmiş kayıt bulunamadı.
+         <div className="empty-state">
+           <Clock size={48} className="empty-state-icon" />
+           <h3>Geçmiş analiz bulunamadı</h3>
+           <p>Yaptığınız analizler ve sinyal geçmişiniz burada listelenecektir.</p>
          </div>
       ) : (
         <table>

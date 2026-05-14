@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, User, LogOut } from 'lucide-react';
+import { Activity, User, LogOut, CheckCircle, AlertTriangle, Info } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 import LandingHero from '../components/dashboard/LandingHero';
@@ -8,6 +8,7 @@ import FavoritesView from '../components/dashboard/FavoritesView';
 import HistoryTable from '../components/dashboard/HistoryTable';
 import ProfileView from '../components/dashboard/ProfileView';
 import PatternAnalysisView from '../components/PatternAnalysisView';
+import LeaderboardView from '../components/dashboard/LeaderboardView';
 import ChatbotWidget from '../components/chat/ChatbotWidget';
 
 import { useDashboardData } from '../hooks/useDashboardData';
@@ -135,6 +136,15 @@ function Dashboard() {
         >
           Geçmiş Sinyaller
         </button>
+        <button 
+          className={`tab-btn ${!showLanding && activeTab === 'leaderboard' ? 'active' : ''}`}
+          onClick={() => {
+            setShowLanding(false);
+            setActiveTab('leaderboard');
+          }}
+        >
+          Top Sinyaller 👑
+        </button>
         {localStorage.getItem('token') && (
           <button 
             className={`tab-btn ${!showLanding && activeTab === 'profile' ? 'active' : ''}`}
@@ -149,7 +159,12 @@ function Dashboard() {
       </div>
 
       {showLanding ? (
-        <LandingHero setShowLanding={setShowLanding} />
+        <LandingHero 
+          setShowLanding={setShowLanding} 
+          setTicker={setTicker} 
+          handleAnalyze={handleAnalyze}
+          setActiveTab={setActiveTab}
+        />
       ) : (
         <>
           {activeTab === 'live' && (
@@ -192,6 +207,10 @@ function Dashboard() {
           {activeTab === 'history' && (
             <HistoryTable history={history} historyLoading={historyLoading} />
           )}
+
+          {activeTab === 'leaderboard' && (
+            <LeaderboardView />
+          )}
         </>
       )}
 
@@ -204,16 +223,24 @@ function Dashboard() {
           padding: '16px 24px', 
           borderRadius: '12px',
           background: 'rgba(15, 23, 42, 0.95)', 
-          border: '1px solid var(--accent-blue)',
+          border: `1px solid ${
+            notification.type === 'error' ? 'var(--danger)' : 
+            notification.type === 'success' ? 'var(--success)' : 'var(--accent-blue)'
+          }`,
           color: 'white', 
           zIndex: 9999, 
-          boxShadow: '0 8px 32px rgba(56, 189, 248, 0.2)',
+          boxShadow: `0 8px 32px ${
+            notification.type === 'error' ? 'rgba(2ef, 68, 68, 0.2)' : 
+            notification.type === 'success' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(56, 189, 248, 0.2)'
+          }`,
           display: 'flex', 
           alignItems: 'center', 
           gap: '12px',
           animation: 'slideIn 0.3s ease-out'
         }}>
-          <Activity size={24} color="var(--accent-blue)" />
+          {notification.type === 'error' ? <AlertTriangle size={24} color="var(--danger)" /> :
+           notification.type === 'success' ? <CheckCircle size={24} color="var(--success)" /> :
+           <Info size={24} color="var(--accent-blue)" />}
           <div style={{fontWeight: 600}}>{notification.message}</div>
         </div>
       )}

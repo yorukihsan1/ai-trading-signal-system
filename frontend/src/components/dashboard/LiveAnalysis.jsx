@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { Search, Star, BarChart2 } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Search, Star, BarChart2, ThumbsUp, ThumbsDown } from 'lucide-react';
 import ChartComponent from '../Chart';
 
 const formatPrice = (val) => {
@@ -11,6 +11,40 @@ const formatPrice = (val) => {
 function LiveAnalysisView({ 
   ticker, setTicker, handleAnalyze, loading, error, result, favorites, toggleFavorite 
 }) {
+  const [feedbackGiven, setFeedbackGiven] = useState(null);
+
+  // Reset feedback when a new analysis is loaded
+  useEffect(() => {
+    setFeedbackGiven(null);
+  }, [result?.analysis_id]);
+
+  const handleFeedback = async (type) => {
+    if (!result?.analysis_id) return;
+    if (feedbackGiven) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert("Geri bildirim vermek için giriş yapmalısınız.");
+        return;
+      }
+      const val = type === 'up' ? 1 : -1;
+      const res = await fetch(`http://localhost:8000/api/analyze/${result.analysis_id}/feedback`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ feedback: val })
+      });
+      if (res.ok) {
+        setFeedbackGiven(type);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   // Yazı yazarken sürekli API isteği gitmemesi için Debounce efekti (Otomatik Arama)
   useEffect(() => {
     if (ticker && ticker.length > 2) {
@@ -52,9 +86,16 @@ function LiveAnalysisView({
       )}
 
       {loading && (
-        <div className="loader-container">
-          <div className="spinner"></div>
-          <p>Yapay Zeka {ticker} verilerini analiz ediyor...</p>
+        <div className="dashboard-grid">
+          <div className="glass-panel main-chart-area">
+            <div className="skeleton skeleton-header"></div>
+            <div className="skeleton skeleton-chart"></div>
+          </div>
+          <div className="side-panel">
+            <div className="skeleton skeleton-card"></div>
+            <div className="skeleton skeleton-card"></div>
+            <div className="skeleton skeleton-card"></div>
+          </div>
         </div>
       )}
 
@@ -161,6 +202,28 @@ function LiveAnalysisView({
                      </span>
                   </div>
                 )}
+              </div>
+            )}
+
+            {result.analysis_id && (
+              <div className="glass-panel result-card" style={{ marginTop: '24px' }}>
+                <div className="result-label" style={{ marginBottom: '0' }}>Bu analiz yararlı oldu mu?</div>
+                <div className="feedback-container">
+                  <button 
+                    className={`feedback-btn ${feedbackGiven === 'up' ? 'active-up' : ''}`}
+                    onClick={() => handleFeedback('up')}
+                    disabled={feedbackGiven !== null}
+                  >
+                    <ThumbsUp size={18} /> Evet
+                  </button>
+                  <button 
+                    className={`feedback-btn ${feedbackGiven === 'down' ? 'active-down' : ''}`}
+                    onClick={() => handleFeedback('down')}
+                    disabled={feedbackGiven !== null}
+                  >
+                    <ThumbsDown size={18} /> Hayır
+                  </button>
+                </div>
               </div>
             )}
           </div>

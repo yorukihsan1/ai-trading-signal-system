@@ -10,8 +10,10 @@ function FavoritesView({ favorites, setActiveTab, handleAnalyze }) {
       </div>
       
       {favorites.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '48px', color: 'var(--text-muted)' }}>
-           Favori listeniz henüz boş. Bir analiz yapıp yıldız ikonuna tıklayarak ekleyebilirsiniz.
+        <div className="empty-state">
+           <Star size={48} className="empty-state-icon" />
+           <h3>Henüz favoriniz yok</h3>
+           <p>Bir analiz yapıp yıldız ikonuna tıklayarak favorilerinize ekleyebilirsiniz.</p>
         </div>
       ) : (
         <div className="favorites-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>

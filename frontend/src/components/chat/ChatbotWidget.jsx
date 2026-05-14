@@ -4,6 +4,23 @@ import './ChatbotWidget.css';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
+const SUGGESTIONS_POOL = [
+  "RSI indikatörü nasıl kullanılır?",
+  "MACD ile nasıl al-sat sinyali üretilir?",
+  "İkili Tepe formasyonu nedir?",
+  "Destek ve direnç seviyeleri nasıl belirlenir?",
+  "Bitcoin'in güncel durumu hakkında ne düşünüyorsun?",
+  "Order Block (Emir Bloğu) nedir?",
+  "Hareketli ortalamalar (SMA/EMA) arasındaki fark nedir?",
+  "Likidite avı (Liquidity Sweep) ne demek?",
+  "Omuz Baş Omuz (OBO) formasyonu nasıl yorumlanır?",
+  "Risk/Ödül (R/R) oranı neden önemlidir?",
+  "Fibonacci düzeltme seviyeleri nasıl çizilir?",
+  "Golden Cross ve Death Cross nedir?",
+  "Ayı ve Boğa piyasası arasındaki temel farklar nelerdir?",
+  "Stop-Loss (Zarar Kes) emri nereye konulmalı?"
+];
+
 const ChatbotWidget = ({ currentTicker }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
@@ -11,6 +28,7 @@ const ChatbotWidget = ({ currentTicker }) => {
   ]);
   const [inputText, setInputText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [quickQuestions, setQuickQuestions] = useState([]);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -20,26 +38,35 @@ const ChatbotWidget = ({ currentTicker }) => {
   useEffect(() => {
     if (isOpen) {
       scrollToBottom();
+      if (messages.length === 1) {
+        const shuffled = [...SUGGESTIONS_POOL].sort(() => 0.5 - Math.random());
+        setQuickQuestions(shuffled.slice(0, 3));
+      }
     }
   }, [messages, isOpen]);
 
-  const handleSendMessage = async (e) => {
-    e.preventDefault();
-    if (!inputText.trim()) return;
+  const sendMessage = async (text) => {
+    if (!text.trim()) return;
 
-    const userMessage = { id: Date.now(), text: inputText, sender: 'user' };
+    const userMessage = { id: Date.now(), text: text, sender: 'user' };
     setMessages(prev => [...prev, userMessage]);
     setInputText("");
     setIsLoading(true);
 
     try {
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      const token = localStorage.getItem('token');
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch(`${API_BASE_URL}/api/chat`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: headers,
         body: JSON.stringify({ 
-            message: userMessage.text,
+            message: text,
             context: currentTicker || "Genel piyasa"
         }),
       });
@@ -58,6 +85,15 @@ const ChatbotWidget = ({ currentTicker }) => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
+    await sendMessage(inputText);
+  };
+
+  const handleQuickQuestionClick = (question) => {
+    sendMessage(question);
   };
 
   return (
@@ -94,6 +130,24 @@ const ChatbotWidget = ({ currentTicker }) => {
                 </div>
               </div>
             )}
+            
+            {messages.length === 1 && !isLoading && (
+              <div className="quick-questions-container">
+                <p className="quick-questions-title">Önerilen Sorular:</p>
+                <div className="quick-questions-list">
+                  {quickQuestions.map((q, idx) => (
+                    <button 
+                      key={idx} 
+                      className="quick-question-btn"
+                      onClick={() => handleQuickQuestionClick(q)}
+                    >
+                      {q}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            
             <div ref={messagesEndRef} />
           </div>
 

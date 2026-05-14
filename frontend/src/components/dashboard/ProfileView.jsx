@@ -66,6 +66,29 @@ function ProfileView({ userData, onUpdate, getAuthHeader, showNotification }) {
         <h2 style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
            <User size={24} color="var(--accent-blue)" /> Kişisel Bilgiler
         </h2>
+        
+        {userData && (
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(129, 140, 248, 0.1))',
+            border: '1px solid var(--accent-blue)',
+            borderRadius: '12px',
+            padding: '16px 20px',
+            marginBottom: '24px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}>
+            <div>
+              <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>Mevcut Rütbeniz</div>
+              <div style={{ fontSize: '1.4rem', fontWeight: 'bold', color: 'var(--text-primary)' }}>{userData.rank || 'Acemi'}</div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+               <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>Formasyon Analizi</div>
+               <div style={{ fontSize: '1.4rem', fontWeight: 'bold', color: 'var(--accent-blue)' }}>{userData.pattern_analysis_count || 0}</div>
+            </div>
+          </div>
+        )}
+
         <form onSubmit={handleUpdateInfo}>
           <div className="form-group">
             <label>Kullanıcı Adı</label>

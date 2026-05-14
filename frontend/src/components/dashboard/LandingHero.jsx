@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Activity, BarChart2, TrendingUp } from 'lucide-react';
 
-function LandingHero({ setShowLanding }) {
+function LandingHero({ setShowLanding, setTicker, handleAnalyze, setActiveTab }) {
   const [selectedFeature, setSelectedFeature] = useState(null);
 
   return (
@@ -32,6 +32,28 @@ function LandingHero({ setShowLanding }) {
           <button className="start-btn-large" onClick={() => setShowLanding(false)}>
             Sistemi Başlat
           </button>
+
+          <div style={{ marginTop: '40px' }}>
+            <p style={{ color: 'var(--text-muted)', marginBottom: '12px', fontSize: '0.9rem' }}>Trend Olan Pariteler</p>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              {['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'AVAXUSDT'].map(coin => (
+                <button
+                  key={coin}
+                  className="favorite-chip"
+                  onClick={() => {
+                    if (setTicker && handleAnalyze && setActiveTab) {
+                      setTicker(coin);
+                      setShowLanding(false);
+                      setActiveTab('live');
+                      setTimeout(() => handleAnalyze(coin), 100);
+                    }
+                  }}
+                >
+                  <TrendingUp size={14} color="var(--accent-blue)" /> {coin}
+                </button>
+              ))}
+            </div>
+          </div>
         </>
       ) : (
         <div className="feature-detail-view premium-card">
